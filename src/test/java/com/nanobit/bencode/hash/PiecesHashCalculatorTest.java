@@ -44,7 +44,7 @@ class PiecesHashCalculatorTest {
 		11101000 = e8 in hex
 		11101000 = 232 in decimal using unsigned byte
 		232 = e8 in hex
-		 */
+		*/
 		
 		byte[] pieces = Files.readAllBytes(Paths.get("src/test/resources/pieces.hash"));
 
