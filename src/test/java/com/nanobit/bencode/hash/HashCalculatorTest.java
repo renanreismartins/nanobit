@@ -1,6 +1,5 @@
 package com.nanobit.bencode.hash;
 
-import com.nanobit.bencode.hash.HashCalculator;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
