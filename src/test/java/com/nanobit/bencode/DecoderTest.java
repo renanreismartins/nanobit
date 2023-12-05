@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -155,6 +156,57 @@ class DecoderTest {
 		assertEquals(new BencodedMap(Map.of(new BencodedString("foo"), new BencodedString("bar"))), decoded);
 		assertEquals(Map.of(new BencodedString("foo"), new BencodedString("bar")), decoded.asMap());
 	}
+
+	@Test
+	void bug() throws IOException {
+		Decoder decoder = new Decoder(toInputStream("04:port"));
+
+		BencodedValue decoded = decoder.decode();
+
+		System.out.println(decoded.asString());
+
+	}
+
+	@Test
+	void read() throws IOException {
+		System.out.println(Arrays.toString(toInputStream("renan").readNBytes(10)));
+	}
+
+	@Test
+	void name() throws IOException {
+		String s = "d8:intervali1800e5:peers" +
+				"l" +
+					"d" +
+						"2:ip13:152.117.104.8" +
+						"7:peer id20:-DE211D-1*7yrAPg7l(W" +
+						"4:porti48683ee" +
+				"d" +
+						"2:ip15:102.129.234.168" +
+						"7:peer id20:-qB4610-GVWlgxL4Y5K6" +
+						"4:porti47676ee" +
+				"d" +
+						"2:ip11:82.3.217.65" +
+						"7:peer id20:00112233445566778899" +
+						"4:porti6868ee" +
+				"d" +
+						"2:ip12:85.220.41.99" +
+						"7:peer id20:M7-4-3--\u0015���\u0006.��\\04:porti61422eed2:ip13:76.182.68.2387:peer id20:-qB4600-Dud3RmH4DQn74:porti8999eed2:ip11:84.17.41.767:peer id20:-TR4030-dogb9qud2g7d4:porti51413eed2:ip10:72.21.17.57:peer id20:-DE211s-Qva.5QxJANvb4:porti42546eeee";
+
+		Decoder decoder = new Decoder(toInputStream(s));
+
+		System.out.println("size");
+		System.out.println(s.length());
+		BencodedValue decoded = decoder.decode();
+	}
+
+	/**
+	 *
+	 * d8:intervali1800e5:peersld2:ip13:152.117.104.87:peer id20:-DE211D-1*7yrAPg7l(W4:porti48683eed2:ip15:102.129.234.1687:peer id20:-qB4610-GVWlgxL4Y5K64:porti47676eed2:ip11:82.3.217.657:peer id20:001122334455667788994:porti6868eed2:ip12:85.220.41.997:peer id20:M7-4-3--���.��\
+	 * 04:porti61422eed2:ip13:76.182.68.2387:peer id20:-qB4600-Dud3RmH4DQn74:porti8999eed2:ip11:84.17.41.767:peer id20:-TR4030-dogb9qud2g7d4:porti51413eed2:ip10:72.21.17.57:peer id20:-DE211s-Qva.5QxJANvb4:porti42546eeee
+	 */
+
+
+
 
 	private static ByteArrayInputStream toInputStream(String str) {
 		return new ByteArrayInputStream(str.getBytes(UTF_8));
