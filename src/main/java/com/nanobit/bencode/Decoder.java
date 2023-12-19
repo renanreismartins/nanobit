@@ -44,6 +44,7 @@ public class Decoder {
 		in.skip(1);
 
 		char current = peek();
+		//TODO check specification for dictionary key ordering
 		Map<BencodedString, BencodedValue> dict = new TreeMap<>();
 		while (current != 'e') {
 			BencodedString key = decodeString();

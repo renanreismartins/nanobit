@@ -8,8 +8,8 @@ import java.util.Map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class BencodedString implements BencodedValue, Comparable<BencodedString> {
-	final byte[] SEPARATOR_ENCODED = ":".getBytes(UTF_8);
-	private final byte[] value;
+	private final byte[] SEPARATOR_ENCODED = ":".getBytes(UTF_8);
+	public final byte[] value;
 
 	public BencodedString(byte[] value) {this.value = value;}
 

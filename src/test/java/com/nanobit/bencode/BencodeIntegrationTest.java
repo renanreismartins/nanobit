@@ -24,6 +24,7 @@ public class BencodeIntegrationTest {
 
 		assertEquals("http://bittorrent-test-tracker.codecrafters.io/announce", dict.get("announce").asString());
 		assertArrayEquals(readAllBytes(Paths.get("src/test/resources/info.hash")), dict.get("info").encode());
+		assertArrayEquals(readAllBytes(Paths.get("src/test/resources/pieces.hash")), ((BencodedString) dict.get("info").asMap().get(new BencodedString("pieces"))).value);
 
 		Map<BencodedString, BencodedValue> info = dict.get("info").asMap();
 		assertEquals(92063, info.get(new BencodedString("length")).asInteger());
@@ -41,8 +42,8 @@ public class BencodeIntegrationTest {
 		System.out.println(InfoHashUrlEncoder.encode(HashCalculator.infoHash(dict.get("info").encode())));
 
 		Map<BencodedString, BencodedValue> info = dict.get("info").asMap();
-		assertEquals(92063, info.get(new BencodedString("length")).asInteger());
-		assertEquals(32768, info.get(new BencodedString("piece length")).asInteger());
+		assertEquals(735261618, info.get(new BencodedString("length")).asInteger());
+		assertEquals(524288, info.get(new BencodedString("piece length")).asInteger());
 		//TODO more properties
 	}
 }

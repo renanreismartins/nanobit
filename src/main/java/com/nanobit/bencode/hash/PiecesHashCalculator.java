@@ -1,8 +1,11 @@
 package com.nanobit.bencode.hash;
 
+import com.nanobit.bencode.Piece;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class PiecesHashCalculator {
 
@@ -17,6 +20,24 @@ public class PiecesHashCalculator {
 		this.piecesSHA1 = piecesSHA1;
 	}
 
+	public List<Piece> pieces() {
+		int mod = fileLength % pieceLength;
+		int lastPieceLength = mod == 0 ? pieceLength : mod;
+
+		List<byte[]> hashes = piecesHashes();
+		int lastHashIndex = hashes.size() - 1;
+		byte[] lastPieceHash = hashes.get(lastHashIndex);
+
+		Stream<Piece> pieces = hashes.stream()
+				.limit(lastHashIndex)
+				.map(s -> new Piece(pieceLength, s));
+
+		//TODO if piecesHashes returns only one element, we are duplicating it here. BUG
+		return Stream
+				.concat(pieces, Stream.of(new Piece(lastPieceLength, lastPieceHash)))
+				.toList();
+	}
+
 	public List<String> piecesHashesHex() {
 		return piecesHashes()
 				.stream()
@@ -24,10 +45,13 @@ public class PiecesHashCalculator {
 				.toList();
 	}
 
-	private List<byte[]> piecesHashes() {
+	public List<byte[]> piecesHashes() {
 		int totalPieces = (int) Math.ceil((double) fileLength / pieceLength);
 
-		return IntStream.range(0, totalPieces)
+		//TODO could maybe just divide piecesSHA1 by 20?
+
+		//return IntStream.range(0, totalPieces)
+		return IntStream.range(0, 1)
 				.mapToObj(i -> Arrays.copyOfRange(piecesSHA1, i * SHA1_SIZE, (i * SHA1_SIZE) + SHA1_SIZE))
 				.toList();
 	}

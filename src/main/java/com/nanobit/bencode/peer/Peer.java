@@ -18,7 +18,8 @@ public class Peer {
 	private final String ip;
 	private final int port;
 	private final String peerId;
-	private Socket socket;
+	public Socket socket;
+	private InputStream is;
 
 	//TODO Remove primitive obsession
 	public Peer(String ip, int port, String peerId) {
@@ -88,54 +89,34 @@ public class Peer {
 		System.out.println();
 		System.out.println();
 
-		InputStream is = socket.getInputStream();
+		is = socket.getInputStream();
 
 
 		receiveHandshake(is);
 
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		receiveMessage(is);
 
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		receiveMessage(is);
-
-				System.out.println("sending interested");
-				ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
-						.put((byte) 0)
-						.put((byte) 0)
-						.put((byte) 0)
-						.put((byte) 1)
-						.put((byte) 2);
-				socket.getOutputStream().write(interestedBuffer.array());
-				System.out.println("interest sent");
-
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		receiveMessage(is);
-
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		receiveMessage(is);
-
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		receiveMessage(is);
 
 
 
 		// always read 4 by 4 bytes... because  00011 is unchoke 3 first bytes telling the size, 1 for the id
 		// 0000 is keep alive so if you read(5), the socket will read 4 and wait for the next byte that will never arrive
-		socket.close();
+		//socket.close();
 	}
 
-	public void receiveMessage(InputStream is) throws IOException {
+	public void sendInterested() throws IOException {
+		System.out.println("sending interested");
+		ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 1)
+				.put((byte) 2); // putInt?
+		socket.getOutputStream().write(interestedBuffer.array());
+		System.out.println("interest sent");
+		System.out.println();
+	}
+
+	public Message receiveMessage() throws IOException {
 		System.out.println("receiving message");
 		byte[] messageSizeBytes = is.readNBytes(4);
 		System.out.println("number of bytes read: " + messageSizeBytes.length);
@@ -144,7 +125,7 @@ public class Peer {
 
 		if (messageSizeBytes.length == 0) {
 			System.out.println("End of stream");
-			return;
+			return new Message(99, 0, null);
 		}
 
 		int messageSize = new BigInteger(messageSizeBytes).intValue();
@@ -155,11 +136,15 @@ public class Peer {
 		} else {
 			int messageType = is.read();
 			System.out.println("message type: " + messageType);
-
 			byte[] message = is.readNBytes(messageSize - 1);
 			System.out.println(Arrays.toString(message));
 			System.out.println();
+
+			return new Message(messageType, messageSize, message);
 		}
+
+
+		return new Message(0, 0, null);
 	}
 
 
@@ -198,22 +183,27 @@ public class Peer {
 
 
 	//TODO pass a message obj instead of this params
-	public void sendRequest(byte[] block) {
-
-	}
-
-
 	public void sendRequest(int pieceIndex, int begin, int length) throws IOException {
-		// 4 for the size; 1 for the messageType = 6 + 4 for the length; int in java = 32 bits = 4 bytes
-		ByteBuffer request = ByteBuffer.allocate(4 + 1 + 4)
+		// 4 for message size (from protocol) + 1 for message type + 4 * 3 = 12 for all the params
+		// + 4 + 4 for the two other params
+		ByteBuffer request = ByteBuffer.allocate(4 + 1 + 12)
 				.put((byte) 0)
 				.put((byte) 0)
 				.put((byte) 0)
-				.put((byte) 0)
+				.put((byte) 13)
 				.put((byte) 6)
+				.putInt(pieceIndex)
+				.putInt(begin)
 				.putInt(length);
 
+		System.out.println("sending request");
+		System.out.println("piece index:" + pieceIndex);
+		System.out.println("block begin:" + begin);
+		System.out.println("length:" + length);
 		socket.getOutputStream().write(request.array());
+		System.out.println("request sent");
+		System.out.println();
+		System.out.println();
 	}
 
 	/*
