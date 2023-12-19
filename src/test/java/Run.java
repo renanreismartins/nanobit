@@ -5,7 +5,7 @@ import com.nanobit.bencode.hash.HashCalculator;
 import com.nanobit.bencode.hash.PiecesHashCalculator;
 import com.nanobit.bencode.peer.Message;
 import com.nanobit.bencode.peer.Peer;
-import com.nanobit.bencode.value.BencodedList;
+import com.nanobit.bencode.TorrentMetadata;
 import com.nanobit.bencode.value.BencodedMap;
 import com.nanobit.bencode.value.BencodedString;
 import com.nanobit.bencode.value.BencodedValue;
@@ -27,7 +27,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,12 +43,13 @@ public class Run {
 		Files.deleteIfExists(path);
 
 		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
-		BencodedMap dict = (BencodedMap) decoder.decode();
-		String announce = dict.get("announce").asString();
-		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(HashCalculator.infoHash(dict.get("info").encode()));
+
+		TorrentMetadata meta = new TorrentMetadata((BencodedMap) decoder.decode());
+
+		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(HashCalculator.infoHash(meta.encodedInfoHash));
 
 		byte[] trackerResponse = new Client().some(
-				announce,
+				meta.announce.toASCIIString(),
 				urlEncodedInfoHash,
 				0,
 				0,
@@ -59,6 +59,7 @@ public class Run {
 		);
 
 		Decoder d = new Decoder(new ByteArrayInputStream(trackerResponse));
+		System.out.println("tracker response:");
 		System.out.println(new String(trackerResponse, StandardCharsets.UTF_8));
 		Map<BencodedString, BencodedValue> decodedTrackerResponse = d.decode().asMap();
 
@@ -82,7 +83,7 @@ public class Run {
 
 		Peer peerConnection = new Peer(peer.get("ip").asString(), peer.get("port").asInteger(), "00112233445566778899");
 		peerConnection.connect();
-		peerConnection.handshake(dict.get("info").encode());
+		peerConnection.handshake(meta.encodedInfoHash);
 
 
 		System.out.println();
@@ -140,13 +141,7 @@ public class Run {
 
 
 		//TODO number of pieces calculation should be included on the torrent class
-		Map<BencodedString, BencodedValue> info = dict.get("info").asMap();
-		Integer length = info.get(new BencodedString("length")).asInteger();
-		Integer pieceLength = info.get(new BencodedString("piece length")).asInteger();
-
-		byte[] pieces = ((BencodedString) dict.get("info").asMap().get(new BencodedString("pieces"))).value;
-
-		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(length, pieceLength, pieces);
+		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(meta.fileLength, meta.pieceLength, meta.piecesHash);
 		Piece firstPiece = piecesHashCalculator.pieces().get(0);
 
 		System.out.println("start blocks");
