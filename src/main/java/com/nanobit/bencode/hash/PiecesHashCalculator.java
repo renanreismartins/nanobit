@@ -12,19 +12,19 @@ public class PiecesHashCalculator {
 	private static final int SHA1_SIZE = 20;
 	private final int fileLength;
 	private final int pieceLength;
-	private final byte[] piecesSHA1;
+	private final byte[] pieceHashes;
 
-	public PiecesHashCalculator(int fileLength, int pieceLength, byte[] piecesSHA1) {
+	public PiecesHashCalculator(int fileLength, int pieceLength, byte[] pieceHashes) {
 		this.fileLength = fileLength;
 		this.pieceLength = pieceLength;
-		this.piecesSHA1 = piecesSHA1;
+		this.pieceHashes = pieceHashes;
 	}
 
 	public List<Piece> pieces() {
 		int mod = fileLength % pieceLength;
 		int lastPieceLength = mod == 0 ? pieceLength : mod;
 
-		List<byte[]> hashes = piecesHashes();
+		List<byte[]> hashes = pieceHashes();
 		int lastHashIndex = hashes.size() - 1;
 		byte[] lastPieceHash = hashes.get(lastHashIndex);
 
@@ -39,20 +39,20 @@ public class PiecesHashCalculator {
 	}
 
 	public List<String> piecesHashesHex() {
-		return piecesHashes()
+		return pieceHashes()
 				.stream()
 				.map(BytesToHex::transform)
 				.toList();
 	}
 
-	public List<byte[]> piecesHashes() {
+	public List<byte[]> pieceHashes() {
 		int totalPieces = (int) Math.ceil((double) fileLength / pieceLength);
 
-		//TODO could maybe just divide piecesSHA1 by 20?
+		//TODO could maybe just divide pieceHashes by 20?
 
 		//return IntStream.range(0, totalPieces)
 		return IntStream.range(0, 1)
-				.mapToObj(i -> Arrays.copyOfRange(piecesSHA1, i * SHA1_SIZE, (i * SHA1_SIZE) + SHA1_SIZE))
+				.mapToObj(i -> Arrays.copyOfRange(pieceHashes, i * SHA1_SIZE, (i * SHA1_SIZE) + SHA1_SIZE))
 				.toList();
 	}
 }

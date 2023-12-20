@@ -6,7 +6,6 @@ import com.nanobit.bencode.hash.HashCalculator;
 import com.nanobit.bencode.hash.PiecesHashCalculator;
 import com.nanobit.bencode.peer.Message;
 import com.nanobit.bencode.peer.Peer;
-import com.nanobit.bencode.value.BencodedMap;
 import tracker.Client;
 import tracker.InfoHashUrlEncoder;
 import tracker.Response;
@@ -40,7 +39,6 @@ public class Run {
 		Files.deleteIfExists(path);
 
 		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
-
 		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
 		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(HashCalculator.infoHash(meta.encodedInfoHash));
@@ -127,7 +125,7 @@ public class Run {
 
 
 		//TODO number of pieces calculation should be included on the torrent class
-		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(meta.fileLength, meta.pieceLength, meta.piecesHash);
+		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(meta.fileLength, meta.pieceLength, meta.pieceHashes);
 		Piece firstPiece = piecesHashCalculator.pieces().get(0);
 
 		System.out.println("start blocks");
@@ -198,7 +196,7 @@ public class Run {
 
 		String shaFromFile = BytesToHex.transform(digestFromDownloadedFile);
 		String shaFromReceivedData = BytesToHex.transform(digestFromReceivedData);
-		String shaFromOriginalTorrent = BytesToHex.transform(firstPiece.sha1);
+		String shaFromOriginalTorrent = BytesToHex.transform(digestFromOriginalTorrent);
 
 
 		System.out.println("digestFromDownloadedFile " + shaFromFile);
@@ -206,7 +204,7 @@ public class Run {
 		System.out.println("shaFromOriginalTorrent " + shaFromOriginalTorrent);
 
 
-		assertEquals(shaFromOriginalTorrent, shaFromFile);
+		assertEquals(shaFromReceivedData, shaFromFile);
 		assertEquals(shaFromOriginalTorrent, shaFromReceivedData);
 
 
