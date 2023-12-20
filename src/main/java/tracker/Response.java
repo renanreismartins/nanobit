@@ -28,10 +28,19 @@ public class Response {
 				.toList();
 	}
 
+	//TODO to be removed when able to connect to peers behind NATs
 	public Peer findPeerByIp(String ip) {
 		return peers.stream()
 				.filter(p -> ip.equals(p.ip))
 				.findAny()
 				.orElseThrow();
+	}
+
+	@Override
+	public String toString() {
+		return "Response{" +
+				"interval=" + interval +
+				", peers=" + peers +
+				'}';
 	}
 }
