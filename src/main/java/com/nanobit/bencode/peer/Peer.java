@@ -5,6 +5,7 @@ import com.nanobit.bencode.hash.BytesToHex;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -14,9 +15,8 @@ import java.util.Arrays;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Peer {
-
-	private final String ip;
-	private final int port;
+	public final String ip;
+	public final int port;
 	private final String peerId;
 	public Socket socket;
 	private InputStream is;

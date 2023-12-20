@@ -1,16 +1,15 @@
 import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.Piece;
+import com.nanobit.bencode.TorrentMetadata;
 import com.nanobit.bencode.hash.BytesToHex;
 import com.nanobit.bencode.hash.HashCalculator;
 import com.nanobit.bencode.hash.PiecesHashCalculator;
 import com.nanobit.bencode.peer.Message;
 import com.nanobit.bencode.peer.Peer;
-import com.nanobit.bencode.TorrentMetadata;
 import com.nanobit.bencode.value.BencodedMap;
-import com.nanobit.bencode.value.BencodedString;
-import com.nanobit.bencode.value.BencodedValue;
 import tracker.Client;
 import tracker.InfoHashUrlEncoder;
+import tracker.Response;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -25,8 +24,6 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +41,7 @@ public class Run {
 
 		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
 
-		TorrentMetadata meta = new TorrentMetadata((BencodedMap) decoder.decode());
+		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
 		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(HashCalculator.infoHash(meta.encodedInfoHash));
 
@@ -58,15 +55,10 @@ public class Run {
 				"00112233445566778899"
 		);
 
-		Decoder d = new Decoder(new ByteArrayInputStream(trackerResponse));
+		Decoder responseDecoder = new Decoder(new ByteArrayInputStream(trackerResponse));
+		Response response = new Response(responseDecoder.decodeMap());
 		System.out.println("tracker response:");
 		System.out.println(new String(trackerResponse, StandardCharsets.UTF_8));
-		Map<BencodedString, BencodedValue> decodedTrackerResponse = d.decode().asMap();
-
-		List<BencodedValue> peers = decodedTrackerResponse.get(new BencodedString("peers")).asList();
-//		BencodedMap peer = (BencodedMap) peers.stream().filter(p -> "76.182.68.238".equals(((BencodedMap) p).get("ip").asString())).findFirst().get();
-		BencodedMap peer = (BencodedMap) peers.stream().filter(p -> "72.21.17.5".equals(((BencodedMap) p).get("ip").asString())).findFirst().get();
-
 
 		System.out.println("calling peer");
 		System.out.println();
@@ -75,13 +67,7 @@ public class Run {
 		System.out.println();
 
 
-
-
-
-
-
-
-		Peer peerConnection = new Peer(peer.get("ip").asString(), peer.get("port").asInteger(), "00112233445566778899");
+		Peer peerConnection = response.findPeerByIp("72.21.17.5");
 		peerConnection.connect();
 		peerConnection.handshake(meta.encodedInfoHash);
 

@@ -18,6 +18,10 @@ public class Decoder {
 
 	public Decoder(InputStream in) {this.in = in;}
 
+	public BencodedMap decodeMap() throws IOException {
+		return (BencodedMap) decodeDictionary();
+	}
+
 	public BencodedValue decode() throws IOException {
 		char firstChar = peek();
 		if (Character.isDigit(firstChar)) {
