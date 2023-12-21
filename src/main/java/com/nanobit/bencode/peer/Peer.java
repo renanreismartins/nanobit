@@ -125,7 +125,11 @@ public class Peer {
 
 		if (messageSizeBytes.length == 0) {
 			System.out.println("End of stream");
-			return new Message(99, 0, null);
+			System.out.println();
+			System.out.println();
+			System.out.println();
+			System.out.println();
+			return new Message(99, 0, new byte[] {});
 		}
 
 		int messageSize = new BigInteger(messageSizeBytes).intValue();
@@ -140,9 +144,17 @@ public class Peer {
 			System.out.println(Arrays.toString(message));
 			System.out.println();
 
+			System.out.println();
+			System.out.println();
+			System.out.println();
+			System.out.println();
+
 			return new Message(messageType, messageSize, message);
 		}
-
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		System.out.println();
 
 		return new Message(0, 0, null);
 	}

@@ -1,3 +1,4 @@
+import com.nanobit.bencode.Block;
 import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.Piece;
 import com.nanobit.bencode.TorrentMetadata;
@@ -148,6 +149,10 @@ public class Run {
 				if (message.id == 7) {
 					System.out.println();
 					System.out.println("block received");
+					System.out.println();
+					System.out.println();
+					System.out.println();
+					System.out.println();
 					int pieceIndex = new BigInteger( Arrays.copyOfRange(message.payload, 0, 4)).intValue();
 					int begin = new BigInteger( Arrays.copyOfRange(message.payload, 4, 8)).intValue();
 					byte[] data = Arrays.copyOfRange(message.payload, 8, message.payload.length);
@@ -179,10 +184,24 @@ public class Run {
 
 
 
+		ByteBuffer buffer = ByteBuffer.allocate(firstPiece.length);
+		firstPiece.blocks.forEach(b -> {
+			if (b.data != null) {
+				buffer.put(b.data);
+			}
+		});
+
 		int sum = firstPiece.blocks.stream().mapToInt(b -> b.size).sum();
-		ByteBuffer buffer = ByteBuffer.allocate(sum);
-		firstPiece.blocks.forEach(b -> buffer.put(b.data));
+
+		System.out.println("buffer.length = " + buffer.position());
+		System.out.println("sum = " + sum);
+		System.out.println("firstPiece.length = " + firstPiece.length);
+
 		byte[] data = buffer.array();
+		System.out.println("piece length end");
+		System.out.println(data.length);
+
+
 
 		byte[] digestFromDownloadedFile = MessageDigest.getInstance("SHA-1").digest(Files.readAllBytes(path));
 		byte[] digestFromReceivedData = MessageDigest.getInstance("SHA-1").digest(data);

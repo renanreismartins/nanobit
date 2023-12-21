@@ -20,10 +20,12 @@ public class PiecesHashCalculator {
 		this.pieceHashes = pieceHashes;
 	}
 
+	/*
 	public List<Piece> pieces() {
 		int mod = fileLength % pieceLength;
 		int lastPieceLength = mod == 0 ? pieceLength : mod;
 
+		// TODO HERE IS THE BUG, THE ONLY PIECE IS COMING WITH THE SIZE OF THE LAST PIECE!!!!!!!!!!!!!!!!!
 		List<byte[]> hashes = pieceHashes();
 		int lastHashIndex = hashes.size() - 1;
 		byte[] lastPieceHash = hashes.get(lastHashIndex);
@@ -35,6 +37,14 @@ public class PiecesHashCalculator {
 		//TODO if piecesHashes returns only one element, we are duplicating it here. BUG
 		return Stream
 				.concat(pieces, Stream.of(new Piece(lastPieceLength, lastPieceHash)))
+				.toList();
+	}*/
+
+	public List<Piece> pieces() {
+		List<byte[]> hashes = pieceHashes();
+
+		return hashes.stream()
+				.map(s -> new Piece(pieceLength, s))
 				.toList();
 	}
 
