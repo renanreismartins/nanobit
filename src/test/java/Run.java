@@ -8,12 +8,10 @@ import com.nanobit.bencode.peer.Peer;
 import tracker.Client;
 import tracker.Response;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,64 +38,29 @@ public class Run {
 		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
 
-		byte[] trackerResponse = new Client().some(
+		Response response = new Client().some(
 				meta.announce.toASCIIString(),
 				meta.infoHash.urlEncoded,
 				0,
 				0,
 				735261618,
 				6868,
-				"00112233445566778899"
+				"00112233445566778899",
+				meta.infoHash
 		);
-
-		Decoder responseDecoder = new Decoder(new ByteArrayInputStream(trackerResponse));
-		Response response = new Response(responseDecoder.decodeMap(), meta.infoHash);
-		System.out.println("tracker response:");
-		System.out.println(new String(trackerResponse, StandardCharsets.UTF_8));
-
-		System.out.println("calling peer");
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println();
 
 
 		Peer peerConnection = response.findPeerByIp("72.21.17.5");
 		peerConnection.connect();
 		peerConnection.handshake();
-
-
-		System.out.println();
-		System.out.println();
-		System.out.println();
 		peerConnection.receiveMessage();
 		peerConnection.showInterest();
-
-
-		//todo remove?
-		System.out.println();
-		System.out.println();
-		System.out.println();
 		peerConnection.receiveMessage();
-
-
 		peerConnection.receiveMessage();
-
-
-
-
-
-
 
 		//TODO number of pieces calculation should be included on the torrent class
 		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(meta.fileLength, meta.pieceLength, meta.pieceHashes);
 		Piece firstPiece = piecesHashCalculator.pieces().get(0);
-
-		System.out.println("start blocks");
-		System.out.println("start blocks");
-		System.out.println("start blocks");
-		System.out.println();
-
 
 		System.out.println("total blocks " + firstPiece.blocks.size());
 		System.out.println(firstPiece.blocks);
@@ -145,8 +108,6 @@ public class Run {
 		System.out.println(peerConnection.receiveMessage());
 
 		peerConnection.socket.close();
-
-
 
 		ByteBuffer buffer = ByteBuffer.allocate(firstPiece.length);
 		firstPiece.blocks.forEach(b -> {
