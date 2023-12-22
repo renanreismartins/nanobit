@@ -2,12 +2,10 @@ import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.Piece;
 import com.nanobit.bencode.TorrentMetadata;
 import com.nanobit.bencode.hash.BytesToHex;
-import com.nanobit.bencode.hash.HashCalculator;
 import com.nanobit.bencode.hash.PiecesHashCalculator;
 import com.nanobit.bencode.peer.Message;
 import com.nanobit.bencode.peer.Peer;
 import tracker.Client;
-import tracker.InfoHashUrlEncoder;
 import tracker.Response;
 
 import java.io.ByteArrayInputStream;
