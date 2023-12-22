@@ -1,11 +1,12 @@
 package com.nanobit.bencode.peer;
 
+import com.nanobit.bencode.Piece;
 import com.nanobit.bencode.hash.BytesToHex;
+import com.nanobit.bencode.hash.InfoHash;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -21,11 +22,14 @@ public class Peer {
 	public Socket socket;
 	private InputStream is;
 
+	public final InfoHash infoHash;
+
 	//TODO Remove primitive obsession
-	public Peer(String ip, int port, String peerId) {
+	public Peer(String ip, int port, String peerId, InfoHash infoHash) {
 		this.ip = ip;
 		this.port = port;
 		this.peerId = peerId;
+		this.infoHash = infoHash;
 	}
 
 	public void connect() throws IOException {
@@ -33,7 +37,7 @@ public class Peer {
 		//TODO log connection, info? debug?
 	}
 
-	public void handshake(byte[] infoHash) throws IOException {
+	public void handshake() throws IOException {
 
 		System.out.println("connected : " + socket.isConnected());
 		ByteBuffer buffer = ByteBuffer.allocate(68)
@@ -59,7 +63,7 @@ public class Peer {
 
 
 		try {
-			byte[] sha1 = MessageDigest.getInstance("SHA-1").digest(infoHash);
+			byte[] sha1 = MessageDigest.getInstance("SHA-1").digest(infoHash.bencoded);
 			System.out.println("info hash size: " + sha1.length);
 			buffer.put(sha1);
 		} catch (NoSuchAlgorithmException e) {
@@ -103,7 +107,12 @@ public class Peer {
 		//socket.close();
 	}
 
-	public void sendInterested() throws IOException {
+	public void download(Piece piece) throws IOException {
+		handshake();
+
+	}
+
+	public void showInterest() throws IOException {
 		System.out.println("sending interested");
 		ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
 				.put((byte) 0)
@@ -113,7 +122,6 @@ public class Peer {
 				.put((byte) 2); // putInt?
 		socket.getOutputStream().write(interestedBuffer.array());
 		System.out.println("interest sent");
-		System.out.println();
 	}
 
 	public Message receiveMessage() throws IOException {

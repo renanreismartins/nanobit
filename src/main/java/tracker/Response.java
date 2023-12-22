@@ -1,5 +1,6 @@
 package tracker;
 
+import com.nanobit.bencode.hash.InfoHash;
 import com.nanobit.bencode.peer.Peer;
 import com.nanobit.bencode.value.BencodedMap;
 
@@ -12,7 +13,7 @@ public class Response {
 	public final int interval;
 	public final List<Peer> peers;
 
-	public Response(BencodedMap response) {
+	public Response(BencodedMap response, InfoHash infoHash) {
 		interval = response.get("interval").asInteger();
 		peers = response.get("peers")
 				.asList()
@@ -22,7 +23,8 @@ public class Response {
 					return new Peer(
 							decodedPeer.get(IP).asString(),
 							decodedPeer.get(PORT).asInteger(),
-							decodedPeer.get(PEER_ID).asString()
+							decodedPeer.get(PEER_ID).asString(),
+							infoHash
 					);
 				})
 				.toList();

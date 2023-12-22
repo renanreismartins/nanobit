@@ -1,4 +1,3 @@
-import com.nanobit.bencode.Block;
 import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.Piece;
 import com.nanobit.bencode.TorrentMetadata;
@@ -42,7 +41,7 @@ public class Run {
 		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
 		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
-		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(HashCalculator.infoHash(meta.encodedInfoHash));
+		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(meta.infoHash.hex);
 
 		byte[] trackerResponse = new Client().some(
 				meta.announce.toASCIIString(),
@@ -55,7 +54,7 @@ public class Run {
 		);
 
 		Decoder responseDecoder = new Decoder(new ByteArrayInputStream(trackerResponse));
-		Response response = new Response(responseDecoder.decodeMap());
+		Response response = new Response(responseDecoder.decodeMap(), meta.infoHash);
 		System.out.println("tracker response:");
 		System.out.println(new String(trackerResponse, StandardCharsets.UTF_8));
 
@@ -68,14 +67,14 @@ public class Run {
 
 		Peer peerConnection = response.findPeerByIp("72.21.17.5");
 		peerConnection.connect();
-		peerConnection.handshake(meta.encodedInfoHash);
+		peerConnection.handshake();
 
 
 		System.out.println();
 		System.out.println();
 		System.out.println();
 		peerConnection.receiveMessage();
-		peerConnection.sendInterested();
+		peerConnection.showInterest();
 
 
 		//todo remove?
@@ -85,38 +84,6 @@ public class Run {
 		peerConnection.receiveMessage();
 
 
-		//peerConnection.sendRequest(0, 0, BLOCK_SIZE);
-
-
-//		System.out.println();
-//		System.out.println();
-//		System.out.println();
-//		peerConnection.receiveMessage();
-//
-//		//peerConnection.sendRequest(0, 0, BLOCK_SIZE);
-//
-//
-//
-//		System.out.println();
-//		System.out.println();
-//		System.out.println();
-//		peerConnection.receiveMessage();
-//
-//		System.out.println();
-//		System.out.println();
-//		System.out.println();
-//		peerConnection.receiveMessage();
-//
-//		System.out.println();
-//		System.out.println();
-//		System.out.println();
-//		peerConnection.receiveMessage();
-//
-//		Thread.sleep(3000l);
-//
-//		System.out.println();
-//		System.out.println();
-//		System.out.println();
 		peerConnection.receiveMessage();
 
 
@@ -229,20 +196,5 @@ public class Run {
 
 		assertEquals(firstPiece.sha1.length, digestFromReceivedData.length);
 		assertArrayEquals(firstPiece.sha1, digestFromReceivedData);
-
-
-		//		List.of().stream().
-//
-//		IntStream.range(0, totalPieces)
-//				.mapToObj(i -> new Piece(i, pieceLength))
-//
-
-
-
-
-
-		//peerConnection.sendRequest(0, 0, BLOCK_SIZE);
-
-
 	}
 }

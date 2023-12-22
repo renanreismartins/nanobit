@@ -1,5 +1,6 @@
 package com.nanobit.bencode;
 
+import com.nanobit.bencode.hash.InfoHash;
 import com.nanobit.bencode.value.BencodedMap;
 import com.nanobit.bencode.value.BencodedString;
 
@@ -14,7 +15,7 @@ public class TorrentMetadata {
 	public final URI announce;
 	public final int fileLength;
 	public final int pieceLength;
-	public final byte[] encodedInfoHash;
+	public final InfoHash infoHash;
 	public final byte[] pieceHashes;
 
 	public TorrentMetadata(BencodedMap decoded) throws URISyntaxException {
@@ -23,7 +24,7 @@ public class TorrentMetadata {
 		BencodedMap info = (BencodedMap) decoded.get(INFO);
 		fileLength = info.get(LENGTH).asInteger();
 		pieceLength = info.get(PIECE_LENGTH).asInteger();
-		encodedInfoHash = decoded.get("info").encode();
+		infoHash = new InfoHash(decoded.get("info").encode());
 		pieceHashes = ((BencodedString) info.get(PIECES)).value;
 	}
 }
