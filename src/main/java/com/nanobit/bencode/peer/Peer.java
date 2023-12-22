@@ -20,7 +20,6 @@ public class Peer {
 	public final int port;
 	private final String peerId;
 	public Socket socket;
-	private InputStream is;
 
 	public final InfoHash infoHash;
 
@@ -34,24 +33,14 @@ public class Peer {
 
 	public void connect() throws IOException {
 		socket = new Socket(ip, port);
+		System.out.println("connected : " + socket.isConnected());
 		//TODO log connection, info? debug?
 	}
 
 	public void handshake() throws IOException {
-
-		System.out.println("connected : " + socket.isConnected());
 		ByteBuffer buffer = ByteBuffer.allocate(68)
 				.put((byte) 19);
-
-		System.out.println("remaining:");
-		System.out.println(buffer.remaining());
-
 		buffer.put("BitTorrent protocol".getBytes(UTF_8));
-
-		System.out.println("remaining:");
-		System.out.println(buffer.remaining());
-
-
 		buffer.put((byte) 0)
 				.put((byte) 0)
 				.put((byte) 0)
@@ -59,52 +48,21 @@ public class Peer {
 				.put((byte) 0)
 				.put((byte) 0)
 				.put((byte) 0)
-				.put((byte) 0);
-
-
-		try {
-			byte[] sha1 = MessageDigest.getInstance("SHA-1").digest(infoHash.bencoded);
-			System.out.println("info hash size: " + sha1.length);
-			buffer.put(sha1);
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-
-		System.out.println("remaining:");
-		System.out.println(buffer.remaining());
+				.put((byte) 0)
+				.put(infoHash.sha1);
 
 		byte[] peerIdBytes = peerId.getBytes(UTF_8);
-		System.out.println("peer id size: " + peerIdBytes.length);
 		buffer.put(peerIdBytes);
 
-		System.out.println("remaining:");
-		System.out.println(buffer.remaining());
 
 		byte[] request = buffer.array();
 		System.out.println(new String(request, UTF_8));
 		socket.getOutputStream().write(request);
-		System.out.println("sent");
 
 
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println();
-
-		is = socket.getInputStream();
-
-
-		receiveHandshake(is);
-
-
-
-
-
-		// always read 4 by 4 bytes... because  00011 is unchoke 3 first bytes telling the size, 1 for the id
+		receiveHandshake();
+		//TODO TEST
 		// 0000 is keep alive so if you read(5), the socket will read 4 and wait for the next byte that will never arrive
-		//socket.close();
 	}
 
 	public void download(Piece piece) throws IOException {
@@ -125,6 +83,8 @@ public class Peer {
 	}
 
 	public Message receiveMessage() throws IOException {
+		InputStream is = socket.getInputStream();
+
 		System.out.println("receiving message");
 		byte[] messageSizeBytes = is.readNBytes(4);
 		System.out.println("number of bytes read: " + messageSizeBytes.length);
@@ -168,7 +128,8 @@ public class Peer {
 	}
 
 
-	private static void receiveHandshake(InputStream is) throws IOException {
+	private void receiveHandshake() throws IOException {
+		InputStream is = socket.getInputStream();
 		System.out.println("Receiving handshake");
 		System.out.println("handshake size: " + is.available());
 		byte[] res = is.readNBytes(68); // before = 68 TODO an example reads 1024, maybe this influences on the next msg?
