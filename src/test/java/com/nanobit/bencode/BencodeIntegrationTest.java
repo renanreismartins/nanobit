@@ -39,8 +39,8 @@ public class BencodeIntegrationTest {
 
 		//assertEquals("http://bittorrent-test-tracker.codecrafters.io/announce", dict.get("announce").asString());
 		//assertArrayEquals(readAllBytes(Paths.get("src/test/resources/info.hash")), dict.get("info").encode());
-		System.out.println(InfoHashUrlEncoder.encode(HashCalculator.infoHash(dict.get("info").encode())));
-		System.out.println((HashCalculator.infoHash(dict.get("info").encode())));
+		System.out.println(InfoHashUrlEncoder.encode(HashCalculator.sha1Hex(dict.get("info").encode())));
+		System.out.println((HashCalculator.sha1Hex(dict.get("info").encode())));
 
 		Map<BencodedString, BencodedValue> info = dict.get("info").asMap();
 		assertEquals(735261618, info.get(new BencodedString("length")).asInteger());

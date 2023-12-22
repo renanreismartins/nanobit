@@ -41,11 +41,10 @@ public class Run {
 		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
 		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
-		String urlEncodedInfoHash = InfoHashUrlEncoder.encode(meta.infoHash.hex);
 
 		byte[] trackerResponse = new Client().some(
 				meta.announce.toASCIIString(),
-				urlEncodedInfoHash,
+				meta.infoHash.urlEncoded,
 				0,
 				0,
 				735261618,
