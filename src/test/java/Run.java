@@ -51,8 +51,12 @@ public class Run {
 
 
 		Peer peerConnection = response.findPeerByIp("72.21.17.5");
+
+		// TODO Temporal dependency
 		peerConnection.connect();
 		peerConnection.handshake();
+		peerConnection.receiveHandshake();
+
 		peerConnection.receiveMessage();
 		peerConnection.showInterest();
 		peerConnection.receiveMessage();

@@ -1,7 +1,5 @@
 package com.nanobit.bencode.peer;
 
-import com.nanobit.bencode.Piece;
-import com.nanobit.bencode.hash.BytesToHex;
 import com.nanobit.bencode.hash.InfoHash;
 
 import java.io.IOException;
@@ -9,10 +7,10 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Peer {
@@ -20,10 +18,12 @@ public class Peer {
 	public final int port;
 	private final String peerId;
 	public Socket socket;
-
 	public final InfoHash infoHash;
+	private final Logger LOG = Logger.getLogger(Peer.class.getName());
 
-	//TODO Remove primitive obsession
+	//TODO Maybe create a PeerResponse to handle the response from the tracker
+	// Then a Peer to represent the peer connection and receive a socket,
+	// so the construction of the obj do not depend on IO.
 	public Peer(String ip, int port, String peerId, InfoHash infoHash) {
 		this.ip = ip;
 		this.port = port;
@@ -33,45 +33,38 @@ public class Peer {
 
 	public void connect() throws IOException {
 		socket = new Socket(ip, port);
-		System.out.println("connected : " + socket.isConnected());
-		//TODO log connection, info? debug?
+		LOG.info(format("Connected to: %s:%d. PeerId: %s", ip, port, peerId));
 	}
 
 	public void handshake() throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(68)
-				.put((byte) 19);
-		buffer.put("BitTorrent protocol".getBytes(UTF_8));
-		buffer.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put(infoHash.sha1);
-
 		byte[] peerIdBytes = peerId.getBytes(UTF_8);
-		buffer.put(peerIdBytes);
 
+		byte[] request = ByteBuffer.allocate(68)
+				.put((byte) 19)
+				.put("BitTorrent protocol".getBytes(UTF_8))
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put((byte) 0)
+				.put(infoHash.sha1)
+				.put(peerIdBytes)
+				.array();
 
-		byte[] request = buffer.array();
-		System.out.println(new String(request, UTF_8));
+		LOG.info(format("Performing handshake. PeerId: %s", peerId));
+		LOG.info(format("Handshake request: %s", new String(request, UTF_8))); //TODO fine level
+
 		socket.getOutputStream().write(request);
 
-
-		receiveHandshake();
-		//TODO TEST
-		// 0000 is keep alive so if you read(5), the socket will read 4 and wait for the next byte that will never arrive
-	}
-
-	public void download(Piece piece) throws IOException {
-		handshake();
-
+		LOG.info("Handshake sent.");
 	}
 
 	public void showInterest() throws IOException {
-		System.out.println("sending interested");
+		LOG.info("Sending Interest.");
+
 		ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
 				.put((byte) 0)
 				.put((byte) 0)
@@ -79,91 +72,54 @@ public class Peer {
 				.put((byte) 1)
 				.put((byte) 2); // putInt?
 		socket.getOutputStream().write(interestedBuffer.array());
-		System.out.println("interest sent");
+
+		LOG.info("Interest sent.");
 	}
 
 	public Message receiveMessage() throws IOException {
 		InputStream is = socket.getInputStream();
 
-		System.out.println("receiving message");
+		LOG.info("Receiving message.");
 		byte[] messageSizeBytes = is.readNBytes(4);
-		System.out.println("number of bytes read: " + messageSizeBytes.length);
-		System.out.println("size bytes: " + Arrays.toString(messageSizeBytes));
+		LOG.fine(format("Message size bytes: %s", Arrays.toString(messageSizeBytes)));
 
+		int messageSize = new BigInteger(messageSizeBytes).intValue();
+		LOG.info(format("Message size in bytes: %d", messageSize));
 
 		if (messageSizeBytes.length == 0) {
-			System.out.println("End of stream");
-			System.out.println();
-			System.out.println();
-			System.out.println();
-			System.out.println();
+			LOG.info("Message received: End of Stream.");
+			// TODO what to do in this case? Return null obj like this? If so change id to negative
 			return new Message(99, 0, new byte[] {});
 		}
 
-		int messageSize = new BigInteger(messageSizeBytes).intValue();
-		System.out.println("size decimal: " + messageSize);
-
 		if (messageSize == 0) {
-			System.out.println("keep alive message");
+			LOG.info("Message received: Keep Alive.");
 		} else {
 			int messageType = is.read();
-			System.out.println("message type: " + messageType);
 			byte[] message = is.readNBytes(messageSize - 1);
-			System.out.println(Arrays.toString(message));
-			System.out.println();
 
-			System.out.println();
-			System.out.println();
-			System.out.println();
-			System.out.println();
+			LOG.info(format("Message received: %d", messageType));
+			LOG.fine(format("Message payload: %s", Arrays.toString(message)));
 
 			return new Message(messageType, messageSize, message);
 		}
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println();
 
 		return new Message(0, 0, null);
 	}
 
 
-	private void receiveHandshake() throws IOException {
+	public void receiveHandshake() throws IOException {
 		InputStream is = socket.getInputStream();
-		System.out.println("Receiving handshake");
-		System.out.println("handshake size: " + is.available());
-		byte[] res = is.readNBytes(68); // before = 68 TODO an example reads 1024, maybe this influences on the next msg?
-		System.out.println("read 68 bytes from the stream");
-		System.out.println("stream: " + Arrays.toString(res));
-		System.out.println("String stream: " + new String(res, UTF_8));
+		LOG.info("Receiving handshake response.");
+		byte[] res = is.readNBytes(68);
+		LOG.info("Handshake received.");
 
-		//byte[] id = Arrays.copyOfRange(res, 0, 28);
-		//-DE211s-Qva.5QxJANvb
-		System.out.println("handshake size after reading 68 bytes: " + is.available());
-
-
-		System.out.println();
-		System.out.println();
-		System.out.println();
-
-		System.out.println("peer id from the response");
-		byte[] resPeerId = Arrays.copyOfRange(res, 48, 68);
-		System.out.println("peer id slice: " + Arrays.toString(resPeerId));
-		System.out.println("peer id in hex: " + BytesToHex.transform(resPeerId));
-		System.out.println("peer id in String: " + new String(resPeerId, UTF_8));
-
-		//TODO or get the last 20 bytes of the response
+		// TODO What to do with the Peer Id from this message? or even with the message
+		// byte[] resPeerId = Arrays.copyOfRange(res, 48, 68);
 	}
-
-	//TODO understand this
-	private static int convertBytesToInt(byte[] bytes) {
-		return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) |
-				((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
-	}
-
-
 
 	//TODO pass a message obj instead of this params
+	// TODO send(Message) then each message knows how to format itself, factory methods
 	public void sendRequest(int pieceIndex, int begin, int length) throws IOException {
 		// 4 for message size (from protocol) + 1 for message type + 4 * 3 = 12 for all the params
 		// + 4 + 4 for the two other params
@@ -177,14 +133,10 @@ public class Peer {
 				.putInt(begin)
 				.putInt(length);
 
-		System.out.println("sending request");
-		System.out.println("piece index:" + pieceIndex);
-		System.out.println("block begin:" + begin);
-		System.out.println("length:" + length);
+		LOG.info("Requesting Piece.");
 		socket.getOutputStream().write(request.array());
-		System.out.println("request sent");
-		System.out.println();
-		System.out.println();
+		// TODO log in level fine the request and level info the params
+		LOG.info("Piece Requested.");
 	}
 
 	/*
@@ -206,5 +158,11 @@ public class Peer {
         }
     }
 }
+
+	//TODO understand this
+	private static int convertBytesToInt(byte[] bytes) {
+		return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) |
+				((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
+	}
 	 */
 }
