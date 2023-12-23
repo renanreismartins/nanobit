@@ -1,5 +1,7 @@
 package com.nanobit.bencode;
 
+import com.nanobit.bencode.hash.BytesToHex;
+
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -8,12 +10,14 @@ public class Piece {
 	public final int id;
 	public final int length;
 	public final byte[] sha1;
+	public final String hex;
 	public final List<Block> blocks;
 
 	public Piece(int id, int length, byte[] sha1) {
 		this.id = id;
 		this.length = length;
 		this.sha1 = sha1;
+		this.hex = BytesToHex.transform(this.sha1);
 
 		int totalBlocks = (int) Math.ceil((double) length / BLOCK_SIZE);
 
