@@ -1,5 +1,4 @@
 import com.nanobit.bencode.Decoder;
-import com.nanobit.bencode.Piece;
 import com.nanobit.bencode.TorrentMetadata;
 import com.nanobit.bencode.hash.PiecesHashCalculator;
 import com.nanobit.bencode.peer.Peer;
@@ -19,7 +18,7 @@ public class Run {
 		new Run().run();
 	}
 
-	public void run() throws IOException, NoSuchAlgorithmException, URISyntaxException, InterruptedException {
+	public void run() throws IOException, URISyntaxException, InterruptedException {
 
 		Path path = Paths.get("initial.avi");
 		Files.deleteIfExists(path);
@@ -54,14 +53,13 @@ public class Run {
 
 		//TODO number of pieces calculation should be included on the torrent class
 		PiecesHashCalculator piecesHashCalculator = new PiecesHashCalculator(meta.fileLength, meta.pieceLength, meta.pieceHashes);
-		Piece firstPiece = piecesHashCalculator.pieces().get(0);
 
-		System.out.println("total blocks " + firstPiece.blocks.size());
-		System.out.println(firstPiece.blocks);
-		System.out.println();
+		piecesHashCalculator.pieces().forEach(p -> {
+			System.out.println("Downloading piece: " + p.id);
+			//Path piecePath = path.resolveSibling(path.getFileName() + "_" + p.id);
+			peerConnection.download(p, path);
+		});
 
-
-		peerConnection.download(firstPiece, path);
 
 		peerConnection.socket.close();
 

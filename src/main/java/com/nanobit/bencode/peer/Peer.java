@@ -153,7 +153,7 @@ public class Peer {
 		ByteBuffer buffer = ByteBuffer.allocate(piece.length);
 		piece.blocks.stream().forEach(b -> {
 			try {
-				this.sendRequest(0, b.begin, b.size);
+				this.sendRequest(piece.id, b.begin, b.size);
 				Message message = this.receiveMessage();
 
 				// TODO CHECK THE BLOCK OFF SET, MESSAGES ARE COMING REPEATED

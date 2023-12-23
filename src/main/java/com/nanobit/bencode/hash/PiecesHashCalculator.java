@@ -24,7 +24,7 @@ public class PiecesHashCalculator {
 		return IntStream.range(0, hashes.size())
 				.mapToObj(i -> {
 					int length = i == hashes.size() ? fileLength % pieceLength : pieceLength;
-					return new Piece(i + 1, length, hashes.get(i));
+					return new Piece(i, length, hashes.get(i));
 				})
 				.toList();
 	}
