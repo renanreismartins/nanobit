@@ -15,7 +15,7 @@ class PieceTest {
 		byte[] byteArray = new byte[pieceSize];
 		Arrays.fill(byteArray, (byte) 0);
 
-		Piece piece = new Piece(pieceSize, byteArray);
+		Piece piece = new Piece(1, pieceSize, byteArray);
 
 		assertEquals(piece.blocks.size(), 32);
 

@@ -1,5 +1,7 @@
 package com.nanobit.bencode.peer;
 
+import com.nanobit.bencode.Piece;
+import com.nanobit.bencode.hash.BytesToHex;
 import com.nanobit.bencode.hash.InfoHash;
 
 import java.io.IOException;
@@ -7,6 +9,11 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -19,6 +26,7 @@ public class Peer {
 	private final String peerId;
 	public Socket socket;
 	public final InfoHash infoHash;
+	public final Path file;
 	private final Logger LOG = Logger.getLogger(Peer.class.getName());
 
 	//TODO Maybe create a PeerResponse to handle the response from the tracker
@@ -29,6 +37,7 @@ public class Peer {
 		this.port = port;
 		this.peerId = peerId;
 		this.infoHash = infoHash;
+		this.file = null; // TODO
 	}
 
 	public void connect() throws IOException {
@@ -83,14 +92,14 @@ public class Peer {
 		byte[] messageSizeBytes = is.readNBytes(4);
 		LOG.fine(format("Message size bytes: %s", Arrays.toString(messageSizeBytes)));
 
-		int messageSize = new BigInteger(messageSizeBytes).intValue();
-		LOG.info(format("Message size in bytes: %d", messageSize));
-
 		if (messageSizeBytes.length == 0) {
 			LOG.info("Message received: End of Stream.");
 			// TODO what to do in this case? Return null obj like this? If so change id to negative
-			return new Message(99, 0, new byte[] {});
+			return new Message(99, 0, new byte[]{});
 		}
+
+		int messageSize = new BigInteger(messageSizeBytes).intValue();
+		LOG.info(format("Message size in bytes: %d", messageSize));
 
 		if (messageSize == 0) {
 			LOG.info("Message received: Keep Alive.");
@@ -137,6 +146,55 @@ public class Peer {
 		socket.getOutputStream().write(request.array());
 		// TODO log in level fine the request and level info the params
 		LOG.info("Piece Requested.");
+	}
+
+	public void download(Piece piece, Path path) {
+
+		ByteBuffer buffer = ByteBuffer.allocate(piece.length);
+		piece.blocks.stream().forEach(b -> {
+			try {
+				this.sendRequest(0, b.begin, b.size);
+				Message message = this.receiveMessage();
+
+				// TODO CHECK THE BLOCK OFF SET, MESSAGES ARE COMING REPEATED
+				if (message.id == 7) {
+					System.out.println("block received");
+					int pieceIndex = new BigInteger(Arrays.copyOfRange(message.payload, 0, 4)).intValue();
+					int begin = new BigInteger(Arrays.copyOfRange(message.payload, 4, 8)).intValue();
+					byte[] data = Arrays.copyOfRange(message.payload, 8, message.payload.length);
+					buffer.put(data);
+					//Files.write(Paths.get(pieceIndex + "_" + begin + ".data"), Arrays.copyOfRange(message.payload, 8, message.payload.length));
+					Files.write(path, data, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+				} else {
+
+					while (message.id != 7) {
+						System.out.println("not piece message, keep retrying");
+						message = this.receiveMessage();
+						if (message.id == 99) {
+							break;
+						}
+					}
+				}
+
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+
+		try {
+			byte[] digestFromReceivedData = MessageDigest.getInstance("SHA-1").digest(buffer.array());
+			byte[] digestFromOriginalTorrent = piece.sha1;
+
+			String shaFromReceivedData = BytesToHex.transform(digestFromReceivedData);
+			String shaFromOriginalTorrent = BytesToHex.transform(digestFromOriginalTorrent);
+
+			if (!shaFromOriginalTorrent.equals(shaFromReceivedData)) {
+				throw new RuntimeException("Corrupted piece");
+			}
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/*

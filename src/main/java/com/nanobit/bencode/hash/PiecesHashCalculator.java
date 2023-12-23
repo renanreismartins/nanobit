@@ -4,8 +4,9 @@ import com.nanobit.bencode.Piece;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class PiecesHashCalculator {
 
@@ -41,10 +42,10 @@ public class PiecesHashCalculator {
 	}*/
 
 	public List<Piece> pieces() {
-		List<byte[]> hashes = pieceHashes();
-
-		return hashes.stream()
-				.map(s -> new Piece(pieceLength, s))
+		AtomicInteger id = new AtomicInteger(1);
+		return pieceHashes()
+				.stream()
+				.map(s -> new Piece(id.getAndIncrement(), pieceLength, s))
 				.toList();
 	}
 

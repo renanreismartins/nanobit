@@ -5,13 +5,14 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Piece {
-
 	static final int BLOCK_SIZE = 16 * 1024; // 16384
+	public final int id;
 	public final int length;
 	public final byte[] sha1;
 	public final List<Block> blocks;
 
-	public Piece(int length, byte[] sha1) {
+	public Piece(int id, int length, byte[] sha1) {
+		this.id = id;
 		this.length = length;
 		this.sha1 = sha1;
 
