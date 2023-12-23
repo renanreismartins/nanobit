@@ -181,22 +181,7 @@ public class Peer {
 			}
 		});
 
-		// TODO Piece should have its sha1?
-		// move it to another place
-		try {
-			byte[] digestFromReceivedData = MessageDigest.getInstance("SHA-1").digest(buffer.array());
-			byte[] digestFromOriginalTorrent = piece.sha1;
-
-			String shaFromReceivedData = BytesToHex.transform(digestFromReceivedData);
-			String shaFromOriginalTorrent = BytesToHex.transform(digestFromOriginalTorrent);
-
-			if (!shaFromOriginalTorrent.equals(shaFromReceivedData)) {
-				throw new RuntimeException("Corrupted piece");
-			}
-
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
+		piece.assertIntegrity(buffer.array());
 	}
 
 	/*

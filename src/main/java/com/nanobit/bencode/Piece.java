@@ -1,7 +1,10 @@
 package com.nanobit.bencode;
 
 import com.nanobit.bencode.hash.BytesToHex;
+import com.nanobit.bencode.peer.CorruptedPieceException;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -27,5 +30,18 @@ public class Piece {
 					return new Block(offset, Math.min(BLOCK_SIZE, length - offset), null);
 				})
 				.toList();
+	}
+
+	public void assertIntegrity(byte[] array) {
+		try {
+			byte[] digestFromReceivedData = MessageDigest.getInstance("SHA-1").digest(array);
+			String shaFromReceivedData = BytesToHex.transform(digestFromReceivedData);
+
+			if (!hex.equals(shaFromReceivedData)) {
+				throw new CorruptedPieceException();
+			}
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
