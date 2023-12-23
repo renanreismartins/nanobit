@@ -17,7 +17,7 @@ class PieceTest {
 
 		Piece piece = new Piece(1, pieceSize, byteArray);
 
-		assertEquals(piece.blocks.size(), 32);
+		assertEquals(32, piece.blocks.size());
 
 		piece.blocks
 				.stream()

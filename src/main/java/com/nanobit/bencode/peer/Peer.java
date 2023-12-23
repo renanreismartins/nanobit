@@ -181,6 +181,8 @@ public class Peer {
 			}
 		});
 
+		// TODO Piece should have its sha1?
+		// move it to another place
 		try {
 			byte[] digestFromReceivedData = MessageDigest.getInstance("SHA-1").digest(buffer.array());
 			byte[] digestFromOriginalTorrent = piece.sha1;
