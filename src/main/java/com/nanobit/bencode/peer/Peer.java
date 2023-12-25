@@ -1,8 +1,14 @@
 package com.nanobit.bencode.peer;
 
 import com.nanobit.bencode.Piece;
-import com.nanobit.bencode.hash.BytesToHex;
 import com.nanobit.bencode.hash.InfoHash;
+import com.nanobit.bencode.peer.message.Block;
+import com.nanobit.bencode.peer.message.EndOfStream;
+import com.nanobit.bencode.peer.message.Handshake;
+import com.nanobit.bencode.peer.message.Interest;
+import com.nanobit.bencode.peer.message.KeepAlive;
+import com.nanobit.bencode.peer.message.Message;
+import com.nanobit.bencode.peer.message.Request;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,13 +18,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Peer {
 	public final String ip;
@@ -46,41 +48,12 @@ public class Peer {
 	}
 
 	public void handshake() throws IOException {
-		byte[] peerIdBytes = peerId.getBytes(UTF_8);
-
-		byte[] request = ByteBuffer.allocate(68)
-				.put((byte) 19)
-				.put("BitTorrent protocol".getBytes(UTF_8))
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put(infoHash.sha1)
-				.put(peerIdBytes)
-				.array();
-
-		LOG.info(format("Performing handshake. Ip: %s", ip));
-		LOG.info(format("Handshake request: %s", new String(request, UTF_8))); //TODO fine level
-
-		socket.getOutputStream().write(request);
-
-		LOG.info(format("Handshake sent. Ip: %s", ip));
+		socket.getOutputStream().write(new Handshake(peerId, infoHash.sha1).bytes);
 	}
 
 	public void showInterest() throws IOException {
 		LOG.info(format("Sending Interest. Ip: %s", ip));
-
-		ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 1)
-				.put((byte) 2); // putInt?
-		socket.getOutputStream().write(interestedBuffer.array());
+		socket.getOutputStream().write(new Interest().bytes);
 		LOG.info(format("Interest sent. Ip: %s", ip));
 	}
 
@@ -92,26 +65,21 @@ public class Peer {
 
 		if (messageSizeBytes.length == 0) {
 			LOG.info("Message received: End of Stream.");
-			// TODO what to do in this case? Return null obj like this? If so change id to negative
-			return new Message(99, 0, new byte[]{});
+			return new EndOfStream();
 		}
 
 		int messageSize = new BigInteger(messageSizeBytes).intValue();
 		LOG.info(format("Message size in bytes: %d", messageSize));
 
 		if (messageSize == 0) {
-			LOG.info("Message received: Keep Alive.");
-		} else {
-			int messageType = is.read();
-			byte[] message = is.readNBytes(messageSize - 1);
-
-			LOG.info(format("Message received: %d", messageType));
-			LOG.fine(format("Message payload: %s", Arrays.toString(message)));
-
-			return new Message(messageType, messageSize, message);
+			return new KeepAlive();
 		}
 
-		return new Message(0, 0, null);
+		int messageType = is.read();
+		LOG.info(format("Message received: %d", messageType));
+		byte[] message = is.readNBytes(messageSize - 1);
+
+		return Message.create(messageSize, messageType, message);
 	}
 
 
@@ -125,50 +93,28 @@ public class Peer {
 		// byte[] resPeerId = Arrays.copyOfRange(res, 48, 68);
 	}
 
-	//TODO pass a message obj instead of this params
-	// TODO send(Message) then each message knows how to format itself, factory methods
-	public void sendRequest(int pieceIndex, int begin, int length) throws IOException {
-		// 4 for message size (from protocol) + 1 for message type + 4 * 3 = 12 for all the params
-		// + 4 + 4 for the two other params
-		ByteBuffer request = ByteBuffer.allocate(4 + 1 + 12)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 0)
-				.put((byte) 13)
-				.put((byte) 6)
-				.putInt(pieceIndex)
-				.putInt(begin)
-				.putInt(length);
-
+	public void sendRequest(Request request) throws IOException {
 		LOG.info("Requesting Piece.");
-		socket.getOutputStream().write(request.array());
-		// TODO log in level fine the request and level info the params
+		socket.getOutputStream().write(request.bytes);
 		LOG.info("Piece Requested.");
 	}
 
 	public void download(Piece piece, Path path) {
-
 		ByteBuffer buffer = ByteBuffer.allocate(piece.length);
 		piece.blocks.stream().forEach(b -> {
 			try {
-				this.sendRequest(piece.id, b.begin, b.size);
+				this.sendRequest(new Request(piece.id, b.begin, b.size));
 				Message message = this.receiveMessage();
 
-				// TODO CHECK THE BLOCK OFF SET, MESSAGES ARE COMING REPEATED
-				if (message.id == 7) {
-					System.out.println("block received");
-					int pieceIndex = new BigInteger(Arrays.copyOfRange(message.payload, 0, 4)).intValue();
-					int begin = new BigInteger(Arrays.copyOfRange(message.payload, 4, 8)).intValue();
-					byte[] data = Arrays.copyOfRange(message.payload, 8, message.payload.length);
-					buffer.put(data);
-					//Files.write(Paths.get(pieceIndex + "_" + begin + ".data"), Arrays.copyOfRange(message.payload, 8, message.payload.length));
-					Files.write(path, data, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+				if (message instanceof Block) {
+					Block block = (Block) message;
+					buffer.put(block.payload);
+					Files.write(path, block.payload, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
 				} else {
-
-					while (message.id != 7) {
+					while (!(message instanceof Block)) {
 						System.out.println("not piece message, keep retrying");
 						message = this.receiveMessage();
-						if (message.id == 99) {
+						if (message instanceof EndOfStream) {
 							break;
 						}
 					}
