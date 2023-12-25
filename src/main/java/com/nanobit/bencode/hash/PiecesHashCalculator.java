@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class PiecesHashCalculator {
-
 	private static final int SHA1_SIZE = 20;
 	private final int fileLength;
 	private final int pieceLength;

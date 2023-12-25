@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 public class Block implements Message {
-	public static final int ID = 7;
 	public final int size;
 	public final int pieceIndex;
 	public final int begin;

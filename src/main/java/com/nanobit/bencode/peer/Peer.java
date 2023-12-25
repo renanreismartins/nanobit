@@ -9,6 +9,7 @@ import com.nanobit.bencode.peer.message.Interest;
 import com.nanobit.bencode.peer.message.KeepAlive;
 import com.nanobit.bencode.peer.message.Message;
 import com.nanobit.bencode.peer.message.Request;
+import com.nanobit.bencode.peer.message.Unchoke;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
@@ -101,57 +103,32 @@ public class Peer {
 
 	public void download(Piece piece, Path path) {
 		ByteBuffer buffer = ByteBuffer.allocate(piece.length);
-		piece.blocks.stream().forEach(b -> {
-			try {
-				this.sendRequest(new Request(piece.id, b.begin, b.size));
-				Message message = this.receiveMessage();
 
-				if (message instanceof Block) {
-					Block block = (Block) message;
-					buffer.put(block.payload);
-					Files.write(path, block.payload, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
-				} else {
-					while (!(message instanceof Block)) {
-						System.out.println("not piece message, keep retrying");
-						message = this.receiveMessage();
-						if (message instanceof EndOfStream) {
-							break;
-						}
-					}
-				}
-
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+		// TODO could replace with some sort of mechanism that ignores all types except choke/unchoke and retries for
+		//  the failed block
+		piece.blocks.forEach(b -> unchecked(() -> {
+			this.sendRequest(new Request(piece.id, b.begin, b.size));
+			Message message = this.receiveMessage();
+			switch (message) {
+				case Block m -> buffer.put(m.payload);
+				default -> throw new IllegalStateException("Unexpected message: " + message);
 			}
-		});
+		}));
 
 		piece.assertIntegrity(buffer.array());
+		unchecked(() -> Files.write(path, buffer.array(), StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE));
 	}
 
-	/*
-	TODO: This transform an integer in a byte[]. To understand later
-	public class IntegerToByteArray {
-    public static void main(String[] args) {
-        // Convert Integer to byte array manually
-        int number = 12345; // Your integer value
-        byte[] byteArray = new byte[Integer.BYTES];
-
-        for (int i = 0; i < Integer.BYTES; ++i) {
-            byteArray[i] = (byte) (number >> (i * 8));
-        }
-
-        // Display the byte array
-        System.out.println("Byte Array:");
-        for (byte b : byteArray) {
-            System.out.print(String.format("%02X ", b));
-        }
-    }
+	private void unchecked(CheckedRunnable<IOException> call) {
+		try {
+			call.run();
+		} catch (Exception e) {
+			throw new RuntimeException("IO Exception", e);
+		}
+	}
 }
 
-	//TODO understand this
-	private static int convertBytesToInt(byte[] bytes) {
-		return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) |
-				((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
-	}
-	 */
+@FunctionalInterface
+ interface CheckedRunnable<E extends Exception> {
+	void run() throws E;
 }
