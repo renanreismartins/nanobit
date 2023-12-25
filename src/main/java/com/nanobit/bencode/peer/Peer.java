@@ -63,16 +63,16 @@ public class Peer {
 				.put(peerIdBytes)
 				.array();
 
-		LOG.info(format("Performing handshake. PeerId: %s", peerId));
+		LOG.info(format("Performing handshake. Ip: %s", ip));
 		LOG.info(format("Handshake request: %s", new String(request, UTF_8))); //TODO fine level
 
 		socket.getOutputStream().write(request);
 
-		LOG.info("Handshake sent.");
+		LOG.info(format("Handshake sent. Ip: %s", ip));
 	}
 
 	public void showInterest() throws IOException {
-		LOG.info("Sending Interest.");
+		LOG.info(format("Sending Interest. Ip: %s", ip));
 
 		ByteBuffer interestedBuffer = ByteBuffer.allocate(5)
 				.put((byte) 0)
@@ -81,8 +81,7 @@ public class Peer {
 				.put((byte) 1)
 				.put((byte) 2); // putInt?
 		socket.getOutputStream().write(interestedBuffer.array());
-
-		LOG.info("Interest sent.");
+		LOG.info(format("Interest sent. Ip: %s", ip));
 	}
 
 	public Message receiveMessage() throws IOException {
@@ -90,7 +89,6 @@ public class Peer {
 
 		LOG.info("Receiving message.");
 		byte[] messageSizeBytes = is.readNBytes(4);
-		LOG.fine(format("Message size bytes: %s", Arrays.toString(messageSizeBytes)));
 
 		if (messageSizeBytes.length == 0) {
 			LOG.info("Message received: End of Stream.");

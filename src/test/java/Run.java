@@ -10,11 +10,17 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 
 public class Run {
 
-	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, URISyntaxException, InterruptedException {
+	public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
+		System.setProperty("java.util.logging.SimpleFormatter.format",
+				"%1$tF %1$tT %4$s %2$s %5$s%6$s%n");
+
+		//TODO ADD DATA ON THE LOGS
+		//2023-12-23 21:36:17 INFO com.nanobit.bencode.peer.Peer sendRequest Requesting Piece.
+		// WHICH PIECE? ETC
+		//
 		new Run().run();
 	}
 
@@ -49,6 +55,9 @@ public class Run {
 		peerConnection.receiveMessage();
 		peerConnection.showInterest();
 		peerConnection.receiveMessage();
+
+		// TODO CHECK WHY THIS SECOND RECEIVE MESSAGE, WHAT HAPPENS IF IGNORED? it fails
+		// MAYBE A MECHANISM TO READ ALL UNTIL IT IS GOOD TO SEND THE FIRST RE
 		peerConnection.receiveMessage();
 
 		//TODO number of pieces calculation should be included on the torrent class
