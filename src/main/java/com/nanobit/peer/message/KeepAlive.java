@@ -1,4 +1,4 @@
-package com.nanobit.bencode.peer.message;
+package com.nanobit.peer.message;
 
 public class KeepAlive implements Message {
 }

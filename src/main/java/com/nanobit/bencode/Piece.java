@@ -1,7 +1,7 @@
 package com.nanobit.bencode;
 
-import com.nanobit.bencode.hash.BytesToHex;
-import com.nanobit.bencode.peer.CorruptedPieceException;
+import com.nanobit.hash.BytesToHex;
+import com.nanobit.peer.CorruptedPieceException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

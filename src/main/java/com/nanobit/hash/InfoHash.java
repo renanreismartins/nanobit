@@ -1,6 +1,6 @@
-package com.nanobit.bencode.hash;
+package com.nanobit.hash;
 
-import tracker.InfoHashUrlEncoder;
+import com.nanobit.tracker.InfoHashUrlEncoder;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

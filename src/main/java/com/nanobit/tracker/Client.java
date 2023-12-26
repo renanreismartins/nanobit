@@ -1,7 +1,7 @@
-package tracker;
+package com.nanobit.tracker;
 
 import com.nanobit.bencode.Decoder;
-import com.nanobit.bencode.hash.InfoHash;
+import com.nanobit.hash.InfoHash;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

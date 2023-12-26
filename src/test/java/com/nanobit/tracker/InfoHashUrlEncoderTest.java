@@ -1,5 +1,6 @@
-package tracker;
+package com.nanobit.tracker;
 
+import com.nanobit.tracker.InfoHashUrlEncoder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

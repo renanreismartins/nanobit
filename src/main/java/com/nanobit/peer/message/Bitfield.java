@@ -1,4 +1,4 @@
-package com.nanobit.bencode.peer.message;
+package com.nanobit.peer.message;
 
 public class Bitfield implements Message {
 	private final int messageSize;

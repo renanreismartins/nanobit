@@ -1,6 +1,6 @@
 package com.nanobit.bencode;
 
-import com.nanobit.bencode.hash.InfoHash;
+import com.nanobit.hash.InfoHash;
 import com.nanobit.bencode.value.BencodedMap;
 import com.nanobit.bencode.value.BencodedString;
 

@@ -2,7 +2,7 @@ package com.nanobit.bencode.peer;
 
 import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.TorrentMetadata;
-import com.nanobit.bencode.value.BencodedMap;
+import com.nanobit.peer.Peer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

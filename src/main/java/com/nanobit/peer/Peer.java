@@ -1,15 +1,14 @@
-package com.nanobit.bencode.peer;
+package com.nanobit.peer;
 
 import com.nanobit.bencode.Piece;
-import com.nanobit.bencode.hash.InfoHash;
-import com.nanobit.bencode.peer.message.Block;
-import com.nanobit.bencode.peer.message.EndOfStream;
-import com.nanobit.bencode.peer.message.Handshake;
-import com.nanobit.bencode.peer.message.Interest;
-import com.nanobit.bencode.peer.message.KeepAlive;
-import com.nanobit.bencode.peer.message.Message;
-import com.nanobit.bencode.peer.message.Request;
-import com.nanobit.bencode.peer.message.Unchoke;
+import com.nanobit.hash.InfoHash;
+import com.nanobit.peer.message.Block;
+import com.nanobit.peer.message.EndOfStream;
+import com.nanobit.peer.message.Handshake;
+import com.nanobit.peer.message.Interest;
+import com.nanobit.peer.message.KeepAlive;
+import com.nanobit.peer.message.Message;
+import com.nanobit.peer.message.Request;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;

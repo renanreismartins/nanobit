@@ -1,7 +1,7 @@
-package tracker;
+package com.nanobit.tracker;
 
-import com.nanobit.bencode.hash.InfoHash;
-import com.nanobit.bencode.peer.Peer;
+import com.nanobit.hash.InfoHash;
+import com.nanobit.peer.Peer;
 import com.nanobit.bencode.value.BencodedMap;
 
 import java.util.List;

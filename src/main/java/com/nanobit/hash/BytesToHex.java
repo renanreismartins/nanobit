@@ -1,4 +1,4 @@
-package com.nanobit.bencode.hash;
+package com.nanobit.hash;
 
 import java.math.BigInteger;
 

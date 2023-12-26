@@ -1,9 +1,9 @@
 import com.nanobit.bencode.Decoder;
 import com.nanobit.bencode.TorrentMetadata;
-import com.nanobit.bencode.hash.PiecesHashCalculator;
-import com.nanobit.bencode.peer.Peer;
-import tracker.Client;
-import tracker.Response;
+import com.nanobit.hash.PiecesHashCalculator;
+import com.nanobit.peer.Peer;
+import com.nanobit.tracker.Client;
+import com.nanobit.tracker.Response;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

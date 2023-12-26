@@ -1,4 +1,4 @@
-package tracker;
+package com.nanobit.tracker;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
