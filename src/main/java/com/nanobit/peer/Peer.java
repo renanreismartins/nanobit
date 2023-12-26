@@ -117,7 +117,7 @@ public class Peer {
 		unchecked(() -> Files.write(path, buffer.array(), StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE));
 	}
 
-	private void unchecked(CheckedRunnable<IOException> call) {
+	private <T extends Exception> void  unchecked(CheckedRunnable<T> call) {
 		try {
 			call.run();
 		} catch (Exception e) {

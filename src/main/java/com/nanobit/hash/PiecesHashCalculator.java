@@ -22,7 +22,7 @@ public class PiecesHashCalculator {
 		List<byte[]> hashes = pieceHashes();
 		return IntStream.range(0, hashes.size())
 				.mapToObj(i -> {
-					int length = i == hashes.size() ? fileLength % pieceLength : pieceLength;
+					int length = i == hashes.size() - 1 ? fileLength % pieceLength : pieceLength;
 					return new Piece(i, length, hashes.get(i));
 				})
 				.toList();

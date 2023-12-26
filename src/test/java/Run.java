@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 
@@ -65,7 +66,6 @@ public class Run {
 			LOG.info(format("Downloading piece: %d", p.id));
 			peerConnection.download(p, path);
 		});
-
 
 		peerConnection.socket.close();
 	}
