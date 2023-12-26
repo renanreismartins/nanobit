@@ -30,7 +30,7 @@ public class Run {
 		Path path = Paths.get("initial.avi");
 		Files.deleteIfExists(path);
 
-		Decoder decoder = new Decoder(getClass().getResourceAsStream("/boy.torrent"));
+		Decoder decoder = new Decoder(getClass().getResourceAsStream("/battle.torrent"));
 		TorrentMetadata meta = new TorrentMetadata(decoder.decodeMap());
 
 		Response response = new Client().some(
